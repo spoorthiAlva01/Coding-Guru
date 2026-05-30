@@ -111,3 +111,34 @@ def get_session(user_id, problem_id):
     conn.close()
 
     return session
+
+def update_code(session_id, code):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        UPDATE sessions
+        SET latest_code = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (code, session_id)
+    )
+
+    conn.commit()
+
+    cursor.execute(
+        """
+        SELECT * FROM sessions
+        WHERE id = ?
+        """,
+        (session_id,)
+    )
+
+    updated_session = cursor.fetchone()
+
+    conn.close()
+
+    return updated_session

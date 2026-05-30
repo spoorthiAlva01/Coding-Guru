@@ -2,7 +2,13 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from services.problem_services import get_problem_by_id
 
-from db import init_db, get_session, create_session
+from db import (
+    init_db,
+    get_session,
+    create_session,
+    update_code
+)
+
 
 
 app = FastAPI()
@@ -14,6 +20,10 @@ init_db()
 class StartSessionRequest(BaseModel):
     user_id: str
     problem_id: str
+
+class UpdateCodeRequest(BaseModel):
+    session_id: int
+    code: str
 
 
 @app.post("/sessions/start")
@@ -43,3 +53,13 @@ def get_problem(problem_id: str):
         }
 
     return problem
+
+@app.patch("/sessions/code")
+def save_code(request: UpdateCodeRequest):
+
+    session = update_code(
+        request.session_id,
+        request.code
+    )
+
+    return dict(session)
