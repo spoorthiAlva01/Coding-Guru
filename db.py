@@ -51,28 +51,11 @@ def init_db():
 
 import json
 
-
 def create_session(user_id, problem_id):
 
     conn = get_connection()
     cursor = conn.cursor()
 
-    # Check if session already exists
-    cursor.execute(
-        """
-        SELECT * FROM sessions
-        WHERE user_id = ? AND problem_id = ?
-        """,
-        (user_id, problem_id)
-    )
-
-    existing_session = cursor.fetchone()
-
-    if existing_session:
-        conn.close()
-        return existing_session
-
-    # Create new session
     cursor.execute(
         """
         INSERT INTO sessions (
@@ -95,7 +78,6 @@ def create_session(user_id, problem_id):
 
     conn.commit()
 
-    # Fetch newly created row
     cursor.execute(
         """
         SELECT * FROM sessions
@@ -109,3 +91,23 @@ def create_session(user_id, problem_id):
     conn.close()
 
     return new_session
+
+
+def get_session(user_id, problem_id):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT * FROM sessions
+        WHERE user_id = ? AND problem_id = ?
+        """,
+        (user_id, problem_id)
+    )
+
+    session = cursor.fetchone()
+
+    conn.close()
+
+    return session

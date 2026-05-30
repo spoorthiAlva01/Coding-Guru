@@ -5,11 +5,11 @@ from services.problem_services import get_problem_by_id
 
 
 init_db()
-
-session = create_session(
-    "spoorthi",
-    "two-sum"
-)
+session = get_session( "spoorthi",
+    "two-sum")
+if not session:
+    session = create_session("spoorthi",
+    "two-sum")
 problem = get_problem_by_id("two-sum")
 
 print(problem)
