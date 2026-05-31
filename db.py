@@ -45,6 +45,22 @@ def init_db():
             UNIQUE(user_id, problem_id)
         )
     """)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+        session_id INTEGER NOT NULL,
+
+        role TEXT NOT NULL,
+
+        content TEXT NOT NULL,
+
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+        FOREIGN KEY (session_id)
+        REFERENCES sessions(id)
+    )
+""")
 
     conn.commit()
     conn.close()
@@ -142,3 +158,102 @@ def update_code(session_id, code):
     conn.close()
 
     return updated_session
+
+def update_chat_history(session_id, chat_history):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        UPDATE sessions
+        SET chat_history = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (
+            json.dumps(chat_history),
+            session_id
+        )
+    )
+
+    conn.commit()
+
+    cursor.execute(
+        """
+        SELECT * FROM sessions
+        WHERE id = ?
+        """,
+        (session_id,)
+    )
+
+    updated_session = cursor.fetchone()
+
+    conn.close()
+
+    return updated_session
+
+def get_session_by_id(session_id):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT * FROM sessions
+        WHERE id = ?
+        """,
+        (session_id,)
+    )
+
+    session = cursor.fetchone()
+
+    conn.close()
+
+    return session
+
+def add_message(session_id, role, content):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        INSERT INTO messages (
+            session_id,
+            role,
+            content
+        )
+        VALUES (?, ?, ?)
+        """,
+        (
+            session_id,
+            role,
+            content
+        )
+    )
+
+    conn.commit()
+
+    conn.close()
+
+def get_messages_by_session(session_id):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT role, content
+        FROM messages
+        WHERE session_id = ?
+        ORDER BY created_at ASC
+        """,
+        (session_id,)
+    )
+
+    messages = cursor.fetchall()
+
+    conn.close()
+
+    return messages

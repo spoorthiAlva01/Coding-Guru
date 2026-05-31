@@ -24,7 +24,10 @@ class StartSessionRequest(BaseModel):
 class UpdateCodeRequest(BaseModel):
     session_id: int
     code: str
-
+    
+class MentorChatRequest(BaseModel):
+    session_id: int
+    message: str
 
 @app.post("/sessions/start")
 def start_session(request: StartSessionRequest):
