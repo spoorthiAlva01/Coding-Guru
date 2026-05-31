@@ -100,6 +100,13 @@ or REVIEW
         "route": route
     }
 
+def route_decision(state: GraphState):
+
+    if state["route"] == "MENTOR":
+        return "mentor"
+
+    return "mentor"
+
 def mentor_node(state: GraphState):
 
     print("Running mentor_node")
@@ -150,3 +157,66 @@ Encourage thinking instead of directly solving.
     return {
         "llm_response": response
     }
+
+
+def save_message_node(state: GraphState):
+
+    print("Running save_message_node")
+
+    add_message(
+        state["session_id"],
+        "assistant",
+        state["llm_response"]
+    )
+
+    return state
+
+
+graph_builder = StateGraph(GraphState)
+
+graph_builder.add_node(
+    "load_context",
+    load_context_node
+)
+
+graph_builder.add_node(
+    "router",
+    router_node
+)
+
+graph_builder.add_node(
+    "mentor",
+    mentor_node
+)
+
+graph_builder.add_node(
+    "save_message",
+    save_message_node
+)
+
+
+graph_builder.add_edge(
+    START,
+    "load_context"
+)
+
+graph_builder.add_edge(
+    "load_context",
+    "router"
+)
+
+graph_builder.add_conditional_edges(
+    "router",
+    route_decision
+)
+graph_builder.add_edge(
+    "mentor",
+    "save_message"
+)
+
+graph_builder.add_edge(
+    "save_message",
+    END
+)
+
+graph = graph_builder.compile()
