@@ -1,0 +1,363 @@
+# 🚀 Coding Guru
+
+### Your Personal AI Coding Mentor
+
+Coding Guru is an AI-powered coding practice platform that goes beyond traditional coding websites by acting as a real-time mentor rather than a solution provider.
+
+Instead of simply showing answers, Coding Guru guides users through problem-solving using contextual mentoring, progressive hints, and AI-powered code reviews.
+
+---
+
+# 🎯 Vision
+
+Most coding platforms focus on evaluating solutions.
+
+Coding Guru focuses on teaching problem-solving.
+
+The platform combines:
+
+* 🧠 AI Mentoring
+* 💡 Progressive Hinting
+* 🔍 Intelligent Code Reviews
+* 📝 Persistent Learning Sessions
+* ⚡ Agentic Workflows powered by LangGraph
+
+to create an interactive learning experience that adapts to each user's journey.
+
+---
+
+# 🏗️ System Architecture
+
+```text
+┌─────────────────────┐
+│      React UI       │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│      FastAPI        │
+│    API Layer        │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│     LangGraph       │
+│  AI Orchestration   │
+└──────────┬──────────┘
+           │
+     ┌─────┼─────┐
+     │     │     │
+     ▼     ▼     ▼
+┌────────┐ ┌────────┐ ┌────────┐
+│Mentor  │ │ Hint   │ │ Review │
+│ Agent  │ │ Agent  │ │ Agent  │
+└────┬───┘ └────┬───┘ └────┬───┘
+     │          │          │
+     └────┬─────┴─────┬────┘
+          ▼           ▼
+      SQLite      Groq LLM
+```
+
+---
+
+# ✨ Key Features
+
+## 🧠 AI Mentor
+
+Users can have natural conversations while solving coding problems.
+
+Example:
+
+```text
+User:
+Can I use a HashMap here?
+
+Mentor:
+Interesting thought. What information would you store in it?
+```
+
+The mentor guides users instead of immediately revealing solutions.
+
+---
+
+## 💡 Progressive Hint Engine
+
+Hints become increasingly specific based on user progress.
+
+### Hint Level 0
+
+```text
+Can you avoid checking every pair?
+```
+
+### Hint Level 1
+
+```text
+What data structure provides O(1) lookup?
+```
+
+### Hint Level 2
+
+```text
+Consider storing previously seen values in a HashMap.
+```
+
+Each hint level is persisted and tracked per user session.
+
+---
+
+## 🔍 AI Code Review
+
+Users can request reviews for their solutions.
+
+The review agent evaluates:
+
+* Correctness
+* Time Complexity
+* Space Complexity
+* Optimization Opportunities
+* Overall Score
+
+Example:
+
+```text
+✓ Correctness: Likely Correct
+
+⏱ Time Complexity: O(n)
+
+💾 Space Complexity: O(n)
+
+⭐ Score: 8.5/10
+
+Suggestions:
+• Good use of HashMap
+• Improve variable naming
+• Consider edge cases
+```
+
+---
+
+## 💾 Persistent Learning Sessions
+
+Each user-problem combination creates a dedicated workspace.
+
+Coding Guru remembers:
+
+* Saved code
+* Hint progression
+* Mentor conversations
+* Review history
+* Problem status
+
+Users can leave and resume exactly where they left off.
+
+---
+
+# 🧠 Agentic AI Workflow
+
+Coding Guru uses LangGraph to orchestrate specialized AI agents.
+
+## Graph Flow
+
+```text
+START
+  │
+  ▼
+Load Context
+  │
+  ▼
+AI Router
+  │
+  ├───────────────┐
+  │               │
+  ▼               ▼
+Mentor         Hint
+  │               │
+  │               ▼
+  │          Save Message
+  │
+  ▼
+Review
+  │
+  ▼
+Save Review
+  │
+  ▼
+Save Message
+  │
+  ▼
+ END
+```
+
+---
+
+## Context-Aware Routing
+
+Instead of relying on keyword matching, Coding Guru uses an LLM-powered router.
+
+Examples:
+
+```text
+"I'm stuck after the second loop"
+```
+
+➡ Routes to Hint Agent
+
+```text
+"Can you review my approach?"
+```
+
+➡ Routes to Review Agent
+
+```text
+"Can I use HashMap here?"
+```
+
+➡ Routes to Mentor Agent
+
+---
+
+# 🗄️ Database Design
+
+## Sessions Table
+
+Represents a user's workspace for a specific problem.
+
+```text
+sessions
+├── user_id
+├── problem_id
+├── status
+├── latest_code
+├── hint_level
+├── review_correctness
+├── review_time_complexity
+├── review_space_complexity
+├── review_feedback
+└── review_score
+```
+
+---
+
+## Messages Table
+
+Stores conversational memory.
+
+```text
+messages
+├── session_id
+├── role
+├── content
+└── created_at
+```
+
+This enables long-term contextual conversations across multiple sessions.
+
+---
+
+# 🔄 AI Context Pipeline
+
+Before every AI interaction:
+
+```text
+User Message
+      │
+      ▼
+Load Session
+      │
+      ▼
+Load Problem
+      │
+      ▼
+Load Saved Code
+      │
+      ▼
+Load Conversation History
+      │
+      ▼
+Build Context
+      │
+      ▼
+Invoke LLM
+      │
+      ▼
+Persist Response
+```
+
+This allows Coding Guru to provide highly contextual and personalized guidance.
+
+---
+
+# 🛠️ Technology Stack
+
+### Frontend
+
+* React
+* Vite
+* Tailwind CSS
+* Monaco Editor
+
+### Backend
+
+* FastAPI
+* SQLite
+
+### AI Layer
+
+* LangGraph
+* Groq LLM
+
+### Data Storage
+
+* SQLite
+* JSON Problem Repository
+
+---
+
+# 📚 AI Engineering Concepts Demonstrated
+
+This project showcases real-world AI engineering patterns:
+
+✅ Stateful AI Systems
+
+✅ Persistent Conversation Memory
+
+✅ Context Injection
+
+✅ LLM-Powered Routing
+
+✅ Multi-Agent Architecture
+
+✅ Structured AI Outputs
+
+✅ Agent Orchestration using LangGraph
+
+✅ Session-Based Learning State
+
+✅ Progressive Hint Generation
+
+✅ Context-Aware Code Reviews
+
+---
+
+# 🚀 Future Enhancements
+
+* User Authentication
+* PostgreSQL Migration
+* Dockerized Code Execution
+* Test Case Validation
+* Retrieval-Augmented Generation (RAG)
+* Learning Analytics Dashboard
+* Personalized Learning Paths
+* Multi-Language Code Support
+* Deployment on Cloud Infrastructure
+
+---
+
+# 🌟 Why Coding Guru?
+
+Most platforms evaluate solutions.
+
+Coding Guru teaches the thought process behind solving them.
+
+The goal is not just to solve coding problems—but to become a better problem solver.
