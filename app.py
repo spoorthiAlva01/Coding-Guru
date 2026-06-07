@@ -12,7 +12,7 @@ from db import (
     add_message,
     get_messages_by_session
 )
-
+from graphs.graph_bot import graph
 from llm import generate_response
 
 
@@ -75,80 +75,13 @@ def save_code(request: UpdateCodeRequest):
 @app.post("/mentor/chat")
 def mentor_chat(request: MentorChatRequest):
 
-    # 1. Fetch session
-    session = get_session_by_id(request.session_id)
-
-    if not session:
-        return {
-            "error": "Session not found"
-        }
-
-    # 2. Fetch problem
-    problem = get_problem_by_id(
-        session["problem_id"]
-    )
-
-    # 3. Save user message
-    add_message(
-        request.session_id,
-        "user",
-        request.message
-    )
-
-    # 4. Fetch full chat history
-    messages = get_messages_by_session(
-        request.session_id
-    )
-
-    # 5. Convert DB rows → LLM format
-    llm_messages = []
-
-    # system prompt first
-    llm_messages.append(
+    result = graph.invoke(
         {
-            "role": "system",
-            "content": f"""
-You are Coding Guru, an AI coding mentor.
-
-Help the user solve this coding problem without directly giving away the answer immediately.
-
-Problem Title: {problem["title"]}
-
-Problem Statement:
-{problem["statement"]}
-
-Description:
-{problem["description"]}
-
-User's Latest Code:
-{session["latest_code"] if session["latest_code"] else "No code written yet"}
-
-Guide the user like a mentor. Ask questions. Give nudges. Encourage problem solving.
-"""
+            "session_id": request.session_id,
+            "user_message": request.message
         }
     )
 
-    for msg in messages:
-        llm_messages.append(
-            {
-                "role": msg["role"],
-                "content": msg["content"]
-            }
-        )
-
-    # 6. Ask LLM
-    response = generate_response(
-        llm_messages
-    )
-
-    # 7. Save assistant reply
-    add_message(
-        request.session_id,
-        "assistant",
-        response
-    )
-
-    # 8. Return response
     return {
-        "response": response
+        "response": result["llm_response"]
     }

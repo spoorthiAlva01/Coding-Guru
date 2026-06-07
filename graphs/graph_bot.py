@@ -1,11 +1,14 @@
 from typing import TypedDict, Optional
 from typing import TypedDict, Optional
 from langgraph.graph import StateGraph, START, END
-
 from db import (
     get_session_by_id,
-    get_messages_by_session
+    get_messages_by_session,
+    add_message,
+    get_hint_level,
+    increment_hint_level
 )
+
 
 from services.problem_services import get_problem_by_id
 
@@ -24,6 +27,8 @@ class GraphState(TypedDict):
     route: Optional[str]
 
     llm_response: Optional[str]
+
+    review_result: Optional[dict]
 
 def load_context_node(state: GraphState):
 
@@ -102,8 +107,11 @@ or REVIEW
 
 def route_decision(state: GraphState):
 
-    if state["route"] == "MENTOR":
-        return "mentor"
+    if state["route"] == "HINT":
+        return "hint"
+
+    if state["route"] == "REVIEW":
+        return "review"
 
     return "mentor"
 
@@ -158,6 +166,153 @@ Encourage thinking instead of directly solving.
         "llm_response": response
     }
 
+def hint_node(state: GraphState):
+
+    print("Running hint_node")
+
+    problem = state["problem"]
+    latest_code = state["latest_code"]
+    user_message = state["user_message"]
+    hint_level = get_hint_level(
+        state["session_id"]
+    )
+
+    llm_messages = [
+        {
+            "role": "system",
+            "content": f"""
+You are Coding Guru, an expert coding mentor.
+
+The user is solving:
+
+{problem["title"]}
+
+Problem Statement:
+{problem["statement"]}
+
+User's Latest Code:
+{latest_code if latest_code else "No code written yet"}
+
+Current Hint Level:
+{hint_level}
+
+Give exactly ONE progressive hint.
+
+Rules:
+- Hint level 0 → very subtle directional nudge
+- Hint level 1 → slightly stronger strategic hint
+- Hint level 2+ → more specific implementation guidance
+
+Do NOT give full solution immediately.
+Help the user think.
+"""
+        },
+        {
+            "role": "user",
+            "content": user_message
+        }
+    ]
+
+    response = generate_response(
+        llm_messages
+    )
+
+    increment_hint_level(
+        state["session_id"]
+    )
+
+    return {
+        "llm_response": response
+    }
+
+
+
+def review_node(state: GraphState):
+
+    print("Running review_node")
+
+    problem = state["problem"]
+    latest_code = state["latest_code"]
+
+    review_prompt = [
+        {
+            "role": "system",
+            "content": f"""
+You are an expert coding interviewer.
+
+Review the user's solution.
+
+Problem Title:
+{problem["title"]}
+
+Problem Statement:
+{problem["statement"]}
+
+User Code:
+{latest_code}
+
+Return ONLY valid JSON.
+
+Schema:
+
+{{
+    "correctness": "",
+    "time_complexity": "",
+    "space_complexity": "",
+    "feedback": [],
+    "score": 0
+}}
+"""
+        }
+    ]
+
+    response = generate_response(
+        review_prompt
+    )
+
+    review = json.loads(response)
+
+    return {
+        "review_result": review
+    }
+
+def save_review_node(state: GraphState):
+
+    print("Running save_review_node")
+
+    review = state["review_result"]
+
+    save_review(
+        session_id=state["session_id"],
+        correctness=review["correctness"],
+        time_complexity=review["time_complexity"],
+        space_complexity=review["space_complexity"],
+        feedback=review["feedback"],
+        score=review["score"]
+    )
+
+    feedback_text = "\n".join(
+        f"- {item}"
+        for item in review["feedback"]
+    )
+
+    response = f"""
+Correctness: {review['correctness']}
+
+Time Complexity: {review['time_complexity']}
+
+Space Complexity: {review['space_complexity']}
+
+Score: {review['score']}/10
+
+Suggestions:
+{feedback_text}
+"""
+
+    return {
+        "llm_response": response
+    }
+
 
 def save_message_node(state: GraphState):
 
@@ -170,6 +325,7 @@ def save_message_node(state: GraphState):
     )
 
     return state
+
 
 
 graph_builder = StateGraph(GraphState)
@@ -187,6 +343,21 @@ graph_builder.add_node(
 graph_builder.add_node(
     "mentor",
     mentor_node
+)
+
+graph_builder.add_node(
+    "hint",
+    hint_node
+)
+
+graph_builder.add_node(
+    "review",
+    review_node
+)
+
+graph_builder.add_node(
+    "save_review",
+    save_review_node
 )
 
 graph_builder.add_node(
@@ -211,6 +382,19 @@ graph_builder.add_conditional_edges(
 )
 graph_builder.add_edge(
     "mentor",
+    "save_message"
+)
+graph_builder.add_edge(
+    "hint",
+    "save_message"
+)
+graph_builder.add_edge(
+    "review",
+    "save_review"
+)
+
+graph_builder.add_edge(
+    "save_review",
     "save_message"
 )
 

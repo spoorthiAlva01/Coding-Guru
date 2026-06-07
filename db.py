@@ -1,4 +1,5 @@
 import sqlite3
+import json
 
 DATABASE_NAME = "coding_guru.db"
 
@@ -257,3 +258,78 @@ def get_messages_by_session(session_id):
     conn.close()
 
     return messages
+
+def get_hint_level(session_id):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT hint_level
+        FROM sessions
+        WHERE id = ?
+        """,
+        (session_id,)
+    )
+
+    row = cursor.fetchone()
+
+    conn.close()
+
+    return row["hint_level"]
+
+def increment_hint_level(session_id):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        UPDATE sessions
+        SET hint_level = hint_level + 1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (session_id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+
+def save_review(
+    session_id,
+    correctness,
+    time_complexity,
+    space_complexity,
+    feedback,
+    score
+):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        UPDATE sessions
+        SET review_correctness = ?,
+            review_time_complexity = ?,
+            review_space_complexity = ?,
+            review_feedback = ?,
+            review_score = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (
+            correctness,
+            time_complexity,
+            space_complexity,
+            json.dumps(feedback),
+            score,
+            session_id
+        )
+    )
+
+    conn.commit()
+    conn.close()
